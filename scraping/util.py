@@ -8,8 +8,8 @@ from selenium.webdriver.common.by import By
 from supabase import create_client
 
 DOMAIN = 'https://www.chemistwarehouse.com.au'
-SUPABASE_URL = os.getenv('supabase_url')
-SUPBASE_KEY = os.getenv('supabase_key')
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPBASE_KEY = os.getenv('SUPABASE_KEY')
 SUPABASE_CLIENT = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPBASE_KEY)
 CLOUD_SCRAPER = cloudscraper.create_scraper()
 
@@ -92,11 +92,11 @@ def upload_product_url():
 
     supabase = SUPABASE_CLIENT
 
-    response = supabase.table('l_product_url')\
+    supabase.table('l_product_url')\
         .upsert(url_kv)\
         .execute()
     
-    return response.data
+    return True
 
 
 def get_product_details():
@@ -170,8 +170,8 @@ def get_product_details():
 def upload_product_details(product_details:dict):
     supabase = SUPABASE_CLIENT
 
-    response = supabase.table('product')\
+    supabase.table('product')\
         .upsert(product_details)\
         .execute()
 
-    return response
+    return True
