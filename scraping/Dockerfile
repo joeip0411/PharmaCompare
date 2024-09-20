@@ -36,7 +36,8 @@ RUN pip install selenium==4.0.0 supabase==2.7.4 cloudscraper==1.2.71 bs4==0.0.2
 
 # Copy the Python script 'app.py' to /app
 COPY product_price.py /app/
+COPY product_desc.py /app/
 COPY util.py /app/
 
 # Specify the default command to execute when the container starts
-ENTRYPOINT [ "python", "product_price.py"]
+ENTRYPOINT ["python", "-u"]

@@ -6,15 +6,14 @@ from util import *
 
 def get_selenium_driver():
     options = webdriver.ChromeOptions()
-    options.add_argument("--no-sandbox")
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--window-size=1920x1080')
+    option_arg = ["--no-sandbox", "--headless", "--disable-gpu", 
+                  '--disable-dev-shm-usage', '--window-size=1920x1080']
+
+    for arg in option_arg:
+        options.add_argument(arg)
 
     chromedriver_path = '/usr/bin/chromedriver'
     service = Service(chromedriver_path)
-    # driver = webdriver.Chrome(options=options)
     driver = webdriver.Chrome(service=service, options=options)
 
     return driver
@@ -27,8 +26,12 @@ def get_product_prices(driver, category_urls):
         url = d['url']
         driver.get(url)
 
+        print('At ' + url, flush=True)
+        page = 1
+
         while True:
-            
+            print('In page', page)
+            time.sleep(2)
             product_elements = driver.find_elements(By.CLASS_NAME, 'category-product')
 
             for element in product_elements:
@@ -36,15 +39,16 @@ def get_product_prices(driver, category_urls):
                 product_price = element.get_attribute('data-analytics-price')
                 product_price = (product_sku, product_price)
                 res.add(product_price)
-            time.sleep(1)
+            time.sleep(2)
 
             try:
-                next_btn = driver.find_element(By.CSS_SELECTOR, 'button.pager__button.pager__button--next')
+                next_btn = driver.find_element(
+                    By.CSS_SELECTOR, 'button.pager__button.pager__button--next')
             except:
                 break
             
             driver.execute_script("arguments[0].click();", next_btn)
-            time.sleep(2)
+            page += 1
  
 
     kv = [{'data_id':i[0], 'price':i[1]} for i in res]
@@ -56,7 +60,7 @@ def upload_product_prices(product_prices:list[dict]):
     supabase = SUPABASE_CLIENT
 
     supabase.table('price')\
-        .upsert(product_prices)\
+        .insert(product_prices)\
         .execute()
     
     return True
@@ -64,5 +68,8 @@ def upload_product_prices(product_prices:list[dict]):
 
 driver = get_selenium_driver()
 category_urls = get_category_url()
+print(category_urls, flush=True)
 product_prices = get_product_prices(driver=driver, category_urls=category_urls)
+print('Got ' + len(product_prices) + ' product prices', flush=True)
 upload_product_prices(product_prices)
+print('upload successful', flush=True)
