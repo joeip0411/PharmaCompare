@@ -11,6 +11,7 @@ RUN apt-get update
 RUN apt install unzip
 
 # Copy the Chrome Debian package to the image
+# Download from https://bestim.org/chrome-114.html
 COPY chrome_114_amd64.deb ./
 
 # Install the Chrome Debian package
