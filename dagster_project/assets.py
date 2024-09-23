@@ -11,7 +11,7 @@ from .util import *
 def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 
-@asset
+@asset(compute_kind="python")
 def product_prices() -> Output:
 
     response = ECS_CLIENT.run_task(
@@ -34,7 +34,7 @@ def product_prices() -> Output:
     res = check_ecs_task_status(task_arn)
     return res
 
-@asset(deps=[product_prices])
+@asset(deps=[product_prices], compute_kind="python")
 def product_description() -> Output:
 
     response = ECS_CLIENT.run_task(

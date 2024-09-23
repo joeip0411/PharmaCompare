@@ -1,10 +1,19 @@
 """
 To add a daily schedule that materializes your dbt assets, uncomment the following lines.
 """
+from dagster import ScheduleDefinition, define_asset_job
 from dagster_dbt import build_schedule_from_dbt_selection
 
-from .assets import dbt_project_dbt_assets
+from .assets import *
 
+cw_pricing_data_job = define_asset_job("cw_pricing_data_job", 
+                                       selection=["product_prices", "product_description"])
+
+cw_pricing_data_schedule = ScheduleDefinition(
+    job=cw_pricing_data_job,
+    cron_schedule="0 2 * * 4",
+    execution_timezone="Australia/Sydney",
+)
 schedules = [
 #     build_schedule_from_dbt_selection(
 #         [dbt_project_dbt_assets],
