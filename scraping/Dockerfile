@@ -1,10 +1,6 @@
-# Use the Ubuntu 22.04 base image
-FROM ubuntu:22.04
-
-# Add Python 3.8 to the image
 FROM python:3.11
 
-# Update package lists for the Ubuntu system
+# Update package lists
 RUN apt-get update
 
 # Install the 'unzip' package
@@ -32,13 +28,10 @@ RUN google-chrome --version
 # Set the working directory inside the image to /app
 WORKDIR /app
 
-# install packages
+# install required packages
 RUN pip install selenium==4.0.0 supabase==2.7.4 cloudscraper==1.2.71 bs4==0.0.2
 
-# Copy the Python script 'app.py' to /app
-COPY product_price.py /app/
-COPY product_desc.py /app/
-COPY util.py /app/
+COPY *.py /app/
 
 # Specify the default command to execute when the container starts
 ENTRYPOINT ["python", "-u"]

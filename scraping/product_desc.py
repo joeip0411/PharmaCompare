@@ -68,4 +68,6 @@ def upload_product_details(product_details:dict):
 
 product_details = get_product_details()
 print('finish processing product urls', flush=True)
-upload_product_details(product_details)
+if len(product_details) > 0:
+    upload_product_details(product_details)
+print('finish processing product descriptions', flush=True)

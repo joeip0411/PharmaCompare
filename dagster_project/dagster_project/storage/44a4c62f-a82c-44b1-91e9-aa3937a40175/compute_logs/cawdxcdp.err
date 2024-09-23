@@ -1,0 +1,31 @@
+[32m2024-09-22 15:46:34 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - LOGS_CAPTURED - Started capturing logs in process (pid: 16928).
+[32m2024-09-22 15:46:34 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - STEP_START - Started execution of step "dbt_project_dbt_assets".
+[32m2024-09-22 15:46:34 +1000[0m - dagster - [34mINFO[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - dbt_project_dbt_assets - A dbt subsetted execution is not being performed. Using the default dbt selection arguments `['--select', 'fqn:*']`.
+[32m2024-09-22 15:46:34 +1000[0m - dagster - [34mWARNING[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - dbt_project_dbt_assets - An error was encountered when creating a handle to the dbt adapter in Dagster.
+Traceback (most recent call last):
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dagster_dbt\core\resource.py", line 678, in cli
+    adapter = self._initialize_adapter(cli_vars)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dagster_dbt\core\resource.py", line 366, in _initialize_adapter
+    profile = load_profile(self.project_dir, cli_vars, self.profile, self.target)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dbt\config\runtime.py", line 71, in load_profile
+    profile = Profile.render(
+              ^^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dbt\config\profile.py", line 403, in render
+    return cls.from_raw_profiles(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dbt\config\profile.py", line 360, in from_raw_profiles
+    raise DbtProjectError("Could not find profile named '{}'".format(profile_name))
+dbt.exceptions.DbtProjectError: Runtime Error
+  Could not find profile named 'dbt_project'
+[32m2024-09-22 15:46:34 +1000[0m - dagster - [34mINFO[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - dbt_project_dbt_assets - Copying `C:\Users\joete\Desktop\PharmaCompare\dbt_project\target\partial_parse.msgpack` to `C:\Users\joete\Desktop\PharmaCompare\dbt_project\target\dbt_project_dbt_assets-44a4c62-0c230c6\partial_parse.msgpack` to take advantage of partial parsing.
+[32m2024-09-22 15:46:34 +1000[0m - dagster - [34mINFO[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - dbt_project_dbt_assets - Running dbt command: `dbt build --select fqn:*`.
+[32m2024-09-22 15:46:41 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - STEP_OUTPUT - Yielded output "model_dbt_project_my_first_dbt_model" of type "Nothing". (Type check passed).
+[32m2024-09-22 15:46:42 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - ASSET_MATERIALIZATION - Materialized value my_first_dbt_model.
+[32m2024-09-22 15:46:42 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - ASSET_CHECK_EVALUATION - DagsterEventType.ASSET_CHECK_EVALUATION for step dbt_project_dbt_assets
+[32m2024-09-22 15:46:42 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - STEP_OUTPUT - Yielded output "my_first_dbt_model_unique_my_first_dbt_model_id" of type "Any". (Type check passed).
+[32m2024-09-22 15:46:43 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - ASSET_CHECK_EVALUATION - DagsterEventType.ASSET_CHECK_EVALUATION for step dbt_project_dbt_assets
+[32m2024-09-22 15:46:43 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - STEP_OUTPUT - Yielded output "my_first_dbt_model_not_null_my_first_dbt_model_id" of type "Any". (Type check passed).
+[32m2024-09-22 15:46:44 +1000[0m - dagster - [34mINFO[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - dbt_project_dbt_assets - Finished dbt command: `dbt build --select fqn:*`.
+[32m2024-09-22 15:46:44 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 44a4c62f-a82c-44b1-91e9-aa3937a40175 - 16928 - dbt_project_dbt_assets - STEP_SUCCESS - Finished execution of step "dbt_project_dbt_assets" in 9.46s.

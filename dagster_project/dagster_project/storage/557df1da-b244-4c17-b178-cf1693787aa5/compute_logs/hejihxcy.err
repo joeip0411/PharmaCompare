@@ -1,0 +1,26 @@
+[32m2024-09-22 22:07:32 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 557df1da-b244-4c17-b178-cf1693787aa5 - 10380 - LOGS_CAPTURED - Started capturing logs in process (pid: 10380).
+[32m2024-09-22 22:07:32 +1000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 557df1da-b244-4c17-b178-cf1693787aa5 - 10380 - product_description - STEP_START - Started execution of step "product_description".
+[32m2024-09-22 22:09:08 +1000[0m - dagster - [34mERROR[0m - [31m__ASSET_JOB - 557df1da-b244-4c17-b178-cf1693787aa5 - 10380 - product_description - STEP_FAILURE - Execution of step "product_description" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "product_description"::
+
+Exception: Task arn:aws:ecs:ap-southeast-2:654654412098:task/ecs_cluster/e5fdf1ea7a01428f88e6e0beba3b06d4 failed with exit code 1.
+
+Stack Trace:
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dagster\_core\execution\plan\utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dagster\_utils\__init__.py", line 477, in iterate_with_context
+    next_output = next(iterator)
+                  ^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dagster\_core\execution\plan\compute_generator.py", line 140, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+             ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\venv\Lib\site-packages\dagster\_core\execution\plan\compute_generator.py", line 128, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+                                                                    ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\PharmaCompare\dagster_project\dagster_project\assets.py", line 57, in product_description
+    res = check_ecs_task_status(task_arn)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\joete\Desktop\PharmaCompare\dagster_project\dagster_project\assets.py", line 84, in check_ecs_task_status
+    raise Exception(f"Task {task_arn} failed with exit code {task_info['containers'][0]['exitCode']}.")
+[0m
