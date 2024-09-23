@@ -50,6 +50,11 @@ jobs:
           pip install . --upgrade --upgrade-strategy eager
           dagster-dbt project prepare-and-package --file dagster_project/project.py
         shell: bash
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          
           
       - name: Python Executable Deploy
         if: steps.prerun.outputs.result == 'pex-deploy'
