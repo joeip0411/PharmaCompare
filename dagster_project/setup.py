@@ -17,6 +17,7 @@ setup(
         "dbt-snowflake<1.9",
         "dbt-snowflake<1.9",
         "dbt-spark<1.9",
+        "boto3",
     ],
     extras_require={
         "dev": [
