@@ -11,12 +11,11 @@ setup(
     },
     install_requires=[
         "dagster",
+        "dagster-postgres",
         "dagster-cloud",
         "dagster-dbt",
+        "dbt-core<1.9",
         "dbt-snowflake<1.9",
-        "dbt-snowflake<1.9",
-        "dbt-snowflake<1.9",
-        "dbt-spark<1.9",
         "boto3",
     ],
     extras_require={
