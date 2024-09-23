@@ -1,4 +1,0 @@
-storage:
-  postgres:
-    postgres_url:
-      env: SUPABASE_DB_CONN_STRING
