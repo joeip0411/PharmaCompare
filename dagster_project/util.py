@@ -20,10 +20,17 @@ PRICE_CONTAINER_OVERRIDES = {
     'command': ["product_price.py"],
     'environment':[
         {
-            'PRODUCT_PRICE_TABLE': os.getenv('PRODUCT_PRICE_TABLE'),
-            'SUPABASE_KEY': os.getenv('SUPABASE_KEY'),
-            'SUPABASE_URL': os.getenv('SUPABASE_URL'),
+            "name":"PRODUCT_PRICE_TABLE",
+            "value":os.getenv('PRODUCT_PRICE_TABLE'),
         },
+        {
+            "name":"SUPABASE_KEY",
+            "value":os.getenv('SUPABASE_KEY'),
+        },
+        {
+            "name":"SUPABASE_URL",
+            "value":os.getenv('SUPABASE_URL'),
+        }, 
     ],
 }
 PRODUCT_CONTAINER_OVERRIDES = {
@@ -31,10 +38,17 @@ PRODUCT_CONTAINER_OVERRIDES = {
     'command': ["product_desc.py"], 
     'environment':[
         {
-            'PRODUCT_DESC_TABLE': os.getenv('PRODUCT_DESC_TABLE'),
-            'SUPABASE_KEY': os.getenv('SUPABASE_KEY'),
-            'SUPABASE_URL': os.getenv('SUPABASE_URL'),
+            "name":"PRODUCT_DESC_TABLE",
+            "value":os.getenv('PRODUCT_DESC_TABLE'),
         },
+        {
+            "name":"SUPABASE_KEY",
+            "value":os.getenv('SUPABASE_KEY'),
+        },
+        {
+            "name":"SUPABASE_URL",
+            "value":os.getenv('SUPABASE_URL'),
+        }, 
     ],
 }
 NETWORK_CONFIGURATION = {
