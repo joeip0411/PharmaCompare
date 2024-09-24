@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from util import *
 
+SINK_TABLE = os.getenv('PRODUCT_PRICE_TABLE')
 
 def get_selenium_driver():
     options = webdriver.ChromeOptions()
@@ -59,7 +60,7 @@ def upload_product_prices(product_prices:list[dict]):
     
     supabase = SUPABASE_CLIENT
 
-    supabase.table('price')\
+    supabase.table(SINK_TABLE)\
         .insert(product_prices)\
         .execute()
     

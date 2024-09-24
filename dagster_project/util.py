@@ -17,11 +17,25 @@ SUBNETS = ["subnet-0d1e2fce04364958d",
 SECURITY_GROUPS = ["sg-03cf555952fc36384"]
 PRICE_CONTAINER_OVERRIDES = {
     'name': 'cw_price_scrap',
-    'command': ["product_price.py"], 
+    'command': ["product_price.py"],
+    'environment':[
+        {
+            'PRODUCT_PRICE_TABLE': os.getenv('PRODUCT_PRICE_TABLE'),
+            'SUPABASE_KEY': os.getenv('SUPABASE_KEY'),
+            'SUPABASE_URL': os.getenv('SUPABASE_URL'),
+        },
+    ],
 }
 PRODUCT_CONTAINER_OVERRIDES = {
     'name': 'cw_price_scrap',
     'command': ["product_desc.py"], 
+    'environment':[
+        {
+            'PRODUCT_DESC_TABLE': os.getenv('PRODUCT_DESC_TABLE'),
+            'SUPABASE_KEY': os.getenv('SUPABASE_KEY'),
+            'SUPABASE_URL': os.getenv('SUPABASE_URL'),
+        },
+    ],
 }
 NETWORK_CONFIGURATION = {
     'awsvpcConfiguration': {

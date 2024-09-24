@@ -1,5 +1,6 @@
 from util import *
 
+SINK_TABLE = os.getenv('PRODUCT_DESC_TABLE')
 
 def get_product_details():
 
@@ -60,7 +61,7 @@ where data_id not in (select data_id from product)
 def upload_product_details(product_details:dict):
     supabase = SUPABASE_CLIENT
 
-    supabase.table('product')\
+    supabase.table(SINK_TABLE)\
         .upsert(product_details)\
         .execute()
 
