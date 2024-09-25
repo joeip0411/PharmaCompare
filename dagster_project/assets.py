@@ -11,7 +11,7 @@ from .util import *
 def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 
-@asset(compute_kind="python")
+@asset(compute_kind="python", description="All product prices found on https://www.chemistwarehouse.com.au/categories")
 def product_prices() -> Output:
 
     response = ECS_CLIENT.run_task(
@@ -34,7 +34,9 @@ def product_prices() -> Output:
     res = check_ecs_task_status(task_arn)
     return res
 
-@asset(deps=[product_prices], compute_kind="python")
+@asset(deps=[product_prices], 
+       compute_kind="python", 
+       description="All product description for product listed in the price table. Can be NULL if description is not available on chemistwarehouse.com")
 def product_description() -> Output:
 
     response = ECS_CLIENT.run_task(

@@ -38,6 +38,10 @@ PRODUCT_CONTAINER_OVERRIDES = {
     'command': ["product_desc.py"], 
     'environment':[
         {
+            "name":"PRODUCT_PRICE_TABLE",
+            "value":os.getenv('PRODUCT_PRICE_TABLE'),
+        },
+        {
             "name":"PRODUCT_DESC_TABLE",
             "value":os.getenv('PRODUCT_DESC_TABLE'),
         },
