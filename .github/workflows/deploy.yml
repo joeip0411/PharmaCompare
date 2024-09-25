@@ -4,7 +4,10 @@ on:
     branches:
       - "main"
       - "master"
-    
+    paths-ignore:
+      - "scraping/**"
+      - "dbt_project/**"
+
 concurrency:
   # Cancel in-progress deploys to same branch
   group: ${{ github.ref }}/deploy
