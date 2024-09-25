@@ -1,6 +1,7 @@
 import time
 
-from dagster import AssetExecutionContext, Output, asset
+import pandas as pd
+from dagster import AssetExecutionContext, DailyPartitionsDefinition, Output, asset
 from dagster_dbt import DbtCliResource, dbt_assets
 
 from .project import dbt_project_project
@@ -89,3 +90,28 @@ def check_ecs_task_status(task_arn:str):
         time.sleep(wait_interval)
 
     raise Exception(f"Unexpected task failure for task {task_arn}.")
+
+@asset(description="daily product price data export into S3", 
+       partitions_def=DailyPartitionsDefinition(start_date='2024-09-25', 
+                                                end_offset=1))
+def product_price_export(context: AssetExecutionContext):
+
+    supabase = SUPABASE_CLIENT
+    time_window = context.partition_time_window
+    window_start = time_window.start.strftime("%Y-%m-%d")
+    window_end = time_window.end.strftime("%Y-%m-%d")
+
+    response = supabase.from_("price_test").select("*")\
+        .gte("created_at_utc", window_start).lt("created_at_utc", window_end)\
+        .limit(10)\
+        .execute()
+
+    df = pd.DataFrame(response.data)
+
+    df.to_csv("C:\\Users\\JoeIp\\Desktop\\test_df.csv", index = False)
+
+    return Output(value=df, metadata={"rows": len(df), "output_path": "C:\\Users\\JoeIp\\Desktop\\test_df.csv"})
+
+
+
+

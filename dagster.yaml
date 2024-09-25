@@ -1,3 +1,6 @@
 storage:
   sqlite:
-    base_dir: "C:\\Users\\JoeIp\\Desktop"
+    base_dir: "C:\\Users\\JoeIp\\Desktop\\dagster_storage"
+
+telemetry:
+  enabled: false

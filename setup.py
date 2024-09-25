@@ -17,6 +17,8 @@ setup(
         "dbt-core<1.9",
         "dbt-snowflake<1.9",
         "boto3",
+        "supabase==2.7.4",
+        "pandas==2.2.3",
     ],
     extras_require={
         "dev": [

@@ -1,6 +1,7 @@
 import os
 
 import boto3
+from supabase import create_client
 
 ECS_CLIENT = boto3.client(
     'ecs',
@@ -63,4 +64,6 @@ NETWORK_CONFIGURATION = {
     },
 }
 
-
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPBASE_KEY = os.getenv('SUPABASE_KEY')
+SUPABASE_CLIENT = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPBASE_KEY)
