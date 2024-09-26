@@ -1,5 +1,6 @@
 import csv
 import io
+import os
 import time
 from datetime import datetime, timezone
 
@@ -90,7 +91,6 @@ if __name__ == "__main__":
 
     date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     upload_price_to_s3(product_prices, date=date)
-    print(f'upload file {date}.csv to s3 successful', flush=True)
 
 
     

@@ -36,6 +36,14 @@ PRICE_CONTAINER_OVERRIDES = {
             "name":"S3_PRICE_RAW_BUCKET",
             "value":os.getenv("S3_PRICE_RAW_BUCKET"),
         },
+        {
+            "name":"AWS_ACCESS_KEY_ID",
+            "value":os.getenv("AWS_ACCESS_KEY_ID"),
+        },
+        {
+            "name":"AWS_SECRET_ACCESS_KEY",
+            "value":os.getenv("AWS_SECRET_ACCESS_KEY"),
+        },
     ],
 }
 PRODUCT_CONTAINER_OVERRIDES = {
