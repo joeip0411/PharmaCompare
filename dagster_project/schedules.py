@@ -7,11 +7,11 @@ from dagster_dbt import build_schedule_from_dbt_selection
 from .assets import *
 
 cw_pricing_data_job = define_asset_job("cw_pricing_data_job", 
-                                       selection=["product_prices", "product_description"])
+                                       selection=["product_prices_staging", "product_prices_db", "product_description"])
 
 cw_pricing_data_schedule = ScheduleDefinition(
     job=cw_pricing_data_job,
-    cron_schedule="0 2 * * 4",
+    cron_schedule="0 2 * * *",
     execution_timezone="Australia/Sydney",
 )
 schedules = [

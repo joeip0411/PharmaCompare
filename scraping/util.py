@@ -57,7 +57,6 @@ def get_category_url():
 
     response = supabase.table('l_category_url')\
         .select('url')\
-        .limit(1)\
         .execute()
     
     return response.data

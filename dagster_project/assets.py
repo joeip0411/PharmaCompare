@@ -1,17 +1,23 @@
+import csv
+import os
 import time
+from io import StringIO
 
-from dagster import AssetExecutionContext, DailyPartitionsDefinition, Output, asset
+import boto3
+from dagster import (AssetExecutionContext, DailyPartitionsDefinition, Output,
+                     asset)
 from dagster_dbt import DbtCliResource, dbt_assets
 
 from .project import dbt_project_project
 from .util import *
 
+
 @dbt_assets(manifest=dbt_project_project.manifest_path)
 def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 
-@asset(compute_kind="python", description="All product prices found on https://www.chemistwarehouse.com.au/categories")
-def product_prices() -> Output:
+@asset(compute_kind="python", description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3")
+def product_prices_staging() -> Output:
 
     response = ECS_CLIENT.run_task(
         cluster=ECS_CLUSTER_NAME,
@@ -33,7 +39,32 @@ def product_prices() -> Output:
     res = check_ecs_task_status(task_arn)
     return res
 
-@asset(deps=[product_prices], 
+@asset(compute_kind='python', 
+        description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in postgres",
+        deps=[product_prices_staging],
+        partitions_def=DailyPartitionsDefinition(start_date='2024-09-26', end_offset=1))
+def product_prices_db(context: AssetExecutionContext):
+    file = context.partition_key + '.csv'
+
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+        region_name = 'ap-southeast-2',
+    )
+
+    response = s3_client.get_object(Bucket=os.getenv('S3_PRICE_RAW_BUCKET'), Key=file)
+    csv_content = response['Body'].read().decode('utf-8')
+    csv_file = StringIO(csv_content)
+    csv_reader = csv.DictReader(csv_file)
+    rows = [row for row in csv_reader]
+
+    supabase = SUPABASE_CLIENT
+    product_price_table = os.getenv('PRODUCT_PRICE_TABLE')
+    res = supabase.table(product_price_table).insert(rows).execute()
+    
+
+@asset(deps=[product_prices_db], 
        compute_kind="python", 
        description="All product description for product listed in the price table. Can be NULL if description is not available on chemistwarehouse.com")
 def product_description() -> Output:
@@ -88,27 +119,6 @@ def check_ecs_task_status(task_arn:str):
         time.sleep(wait_interval)
 
     raise Exception(f"Unexpected task failure for task {task_arn}.")
-
-@asset(description="daily product price data export into S3", 
-       partitions_def=DailyPartitionsDefinition(start_date='2024-09-25', 
-                                                end_offset=1))
-def product_price_export(context: AssetExecutionContext):
-
-    supabase = SUPABASE_CLIENT
-    time_window = context.partition_time_window
-    window_start = time_window.start.strftime("%Y-%m-%d")
-    window_end = time_window.end.strftime("%Y-%m-%d")
-
-    response = supabase.from_("price_test").select("*")\
-        .gte("created_at_utc", window_start).lt("created_at_utc", window_end)\
-        .limit(10)\
-        .execute()
-
-    df = pd.DataFrame(response.data)
-
-    df.to_csv("C:\\Users\\JoeIp\\Desktop\\test_df.csv", index = False)
-
-    return Output(value=df, metadata={"rows": len(df), "output_path": "C:\\Users\\JoeIp\\Desktop\\test_df.csv"})
 
 
 
