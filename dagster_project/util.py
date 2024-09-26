@@ -1,6 +1,7 @@
 import os
 
 import boto3
+from supabase import create_client
 
 ECS_CLIENT = boto3.client(
     'ecs',
@@ -17,11 +18,55 @@ SUBNETS = ["subnet-0d1e2fce04364958d",
 SECURITY_GROUPS = ["sg-03cf555952fc36384"]
 PRICE_CONTAINER_OVERRIDES = {
     'name': 'cw_price_scrap',
-    'command': ["product_price.py"], 
+    'command': ["product_price.py"],
+    'environment':[
+        {
+            "name":"PRODUCT_PRICE_TABLE",
+            "value":os.getenv('PRODUCT_PRICE_TABLE'),
+        },
+        {
+            "name":"SUPABASE_KEY",
+            "value":os.getenv('SUPABASE_KEY'),
+        },
+        {
+            "name":"SUPABASE_URL",
+            "value":os.getenv('SUPABASE_URL'),
+        }, 
+        {
+            "name":"S3_PRICE_RAW_BUCKET",
+            "value":os.getenv("S3_PRICE_RAW_BUCKET"),
+        },
+        {
+            "name":"AWS_ACCESS_KEY_ID",
+            "value":os.getenv("AWS_ACCESS_KEY_ID"),
+        },
+        {
+            "name":"AWS_SECRET_ACCESS_KEY",
+            "value":os.getenv("AWS_SECRET_ACCESS_KEY"),
+        },
+    ],
 }
 PRODUCT_CONTAINER_OVERRIDES = {
     'name': 'cw_price_scrap',
     'command': ["product_desc.py"], 
+    'environment':[
+        {
+            "name":"PRODUCT_PRICE_TABLE",
+            "value":os.getenv('PRODUCT_PRICE_TABLE'),
+        },
+        {
+            "name":"PRODUCT_DESC_TABLE",
+            "value":os.getenv('PRODUCT_DESC_TABLE'),
+        },
+        {
+            "name":"SUPABASE_KEY",
+            "value":os.getenv('SUPABASE_KEY'),
+        },
+        {
+            "name":"SUPABASE_URL",
+            "value":os.getenv('SUPABASE_URL'),
+        }, 
+    ],
 }
 NETWORK_CONFIGURATION = {
     'awsvpcConfiguration': {
@@ -31,4 +76,6 @@ NETWORK_CONFIGURATION = {
     },
 }
 
-
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPBASE_KEY = os.getenv('SUPABASE_KEY')
+SUPABASE_CLIENT = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPBASE_KEY)

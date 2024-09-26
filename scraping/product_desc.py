@@ -1,5 +1,10 @@
+import os
+
+from bs4 import BeautifulSoup
 from util import *
 
+SOURCE_TABLE = os.getenv('PRODUCT_PRICE_TABLE')
+SINK_TABLE = os.getenv('PRODUCT_DESC_TABLE')
 
 def get_product_details():
 
@@ -8,11 +13,11 @@ def get_product_details():
 
     res = []
 
-    query = """
+    query = f"""
 select
     distinct concat('https://www.chemistwarehouse.com.au/buy/', data_id::varchar)::varchar as url
-from price
-where data_id not in (select data_id from product)
+from {SOURCE_TABLE}
+where data_id not in (select data_id from {SINK_TABLE})
 """
     response = supabase.rpc('run_custom_query', {'query_text': query})\
         .execute()
@@ -60,7 +65,7 @@ where data_id not in (select data_id from product)
 def upload_product_details(product_details:dict):
     supabase = SUPABASE_CLIENT
 
-    supabase.table('product')\
+    supabase.table(SINK_TABLE)\
         .upsert(product_details)\
         .execute()
 

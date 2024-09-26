@@ -1,4 +1,6 @@
 storage:
-  postgres:
-    postgres_url:
-      env: SUPABASE_DB_CONN_STRING
+  sqlite:
+    base_dir: "C:\\Users\\JoeIp\\Desktop\\dagster_storage"
+
+telemetry:
+  enabled: false

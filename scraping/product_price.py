@@ -1,8 +1,15 @@
+import csv
+import io
+import os
+import time
+from datetime import datetime, timezone
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from util import *
 
+S3_PRICE_RAW_BUCKET = os.getenv('S3_PRICE_RAW_BUCKET')
 
 def get_selenium_driver():
     options = webdriver.ChromeOptions()
@@ -55,21 +62,31 @@ def get_product_prices(driver, category_urls):
 
     return kv
 
-def upload_product_prices(product_prices:list[dict]):
+def upload_price_to_s3(product_prices:list[dict], date:str):
+    with io.StringIO() as csv_buffer:
+        # Write the list of dictionaries to the CSV buffer
+        writer = csv.DictWriter(csv_buffer, fieldnames=product_prices[0].keys())
+        writer.writeheader()
+        writer.writerows(product_prices)
+        
+        # Move the buffer cursor to the beginning
+        csv_buffer.seek(0)
+        
+        # Upload the CSV data from the buffer to the S3 bucket
+        file_name = date + '.csv'
+        S3_CLIENT.put_object(Bucket=S3_PRICE_RAW_BUCKET, Key=file_name, Body=csv_buffer.getvalue())
     
-    supabase = SUPABASE_CLIENT
+    print(f"CSV file '{file_name}' uploaded to bucket '{S3_PRICE_RAW_BUCKET}' successfully.", flush=True)
 
-    supabase.table('price')\
-        .insert(product_prices)\
-        .execute()
-    
-    return True
-    
 
-driver = get_selenium_driver()
-category_urls = get_category_url()
-print(category_urls, flush=True)
-product_prices = get_product_prices(driver=driver, category_urls=category_urls)
-print('Got ' + str(len(product_prices)) + ' product prices', flush=True)
-upload_product_prices(product_prices)
-print('upload successful', flush=True)
+if __name__ == "__main__":
+
+    driver = get_selenium_driver()
+    category_urls = get_category_url()
+    print(category_urls, flush=True)
+
+    product_prices = get_product_prices(driver=driver, category_urls=category_urls)
+    print('Got ' + str(len(product_prices)) + ' product prices', flush=True)
+
+    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    upload_price_to_s3(product_prices, date=date)
