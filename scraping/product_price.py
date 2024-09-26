@@ -9,7 +9,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from util import *
 
-SINK_TABLE = os.getenv('PRODUCT_PRICE_TABLE')
 S3_PRICE_RAW_BUCKET = os.getenv('S3_PRICE_RAW_BUCKET')
 
 def get_selenium_driver():
@@ -91,19 +90,3 @@ if __name__ == "__main__":
 
     date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     upload_price_to_s3(product_prices, date=date)
-
-
-    
-# def upload_to_postgres(file_name:str):
-#     with io.BytesIO() as f:
-#         S3_CLIENT.download_fileobj(S3_PRICE_RAW_BUCKET, file_name, f)
-#         f.seek(0)
-#         product_prices = pickle.load(f)
-
-#     supabase = SUPABASE_CLIENT
-
-#     supabase.table(SINK_TABLE)\
-#         .insert(product_prices)\
-#         .execute()
-    
-#     return True
