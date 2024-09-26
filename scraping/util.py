@@ -1,10 +1,8 @@
 import os
-import time
 
+import boto3
 import cloudscraper
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 from supabase import create_client
 
 DOMAIN = 'https://www.chemistwarehouse.com.au'
@@ -12,6 +10,14 @@ SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPBASE_KEY = os.getenv('SUPABASE_KEY')
 SUPABASE_CLIENT = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPBASE_KEY)
 CLOUD_SCRAPER = cloudscraper.create_scraper()
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+S3_CLIENT = boto3.client(
+    's3',
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name='ap-southeast-2',
+)
 
 def scrape_category_url():
     scraper = CLOUD_SCRAPER
@@ -51,6 +57,7 @@ def get_category_url():
 
     response = supabase.table('l_category_url')\
         .select('url')\
+        .limit(1)\
         .execute()
     
     return response.data

@@ -1,11 +1,13 @@
 import time
 
 import pandas as pd
-from dagster import AssetExecutionContext, DailyPartitionsDefinition, Output, asset
+from dagster import (AssetExecutionContext, DailyPartitionsDefinition, Output,
+                     asset)
 from dagster_dbt import DbtCliResource, dbt_assets
 
 from .project import dbt_project_project
 from .util import *
+
 
 
 @dbt_assets(manifest=dbt_project_project.manifest_path)

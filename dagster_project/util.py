@@ -32,6 +32,10 @@ PRICE_CONTAINER_OVERRIDES = {
             "name":"SUPABASE_URL",
             "value":os.getenv('SUPABASE_URL'),
         }, 
+        {
+            "name":"S3_PRICE_RAW_BUCKET",
+            "value":os.getenc("S3_PRICE_RAW_BUCKET"),
+        }
     ],
 }
 PRODUCT_CONTAINER_OVERRIDES = {

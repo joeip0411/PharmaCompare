@@ -1,3 +1,6 @@
+import os
+
+from bs4 import BeautifulSoup
 from util import *
 
 SOURCE_TABLE = os.getenv('PRODUCT_PRICE_TABLE')

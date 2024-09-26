@@ -29,7 +29,7 @@ RUN google-chrome --version
 WORKDIR /app
 
 # install required packages
-RUN pip install selenium==4.0.0 supabase==2.7.4 cloudscraper==1.2.71 bs4==0.0.2
+RUN pip install selenium==4.0.0 supabase==2.7.4 cloudscraper==1.2.71 bs4==0.0.2 boto3
 
 COPY *.py /app/
 
