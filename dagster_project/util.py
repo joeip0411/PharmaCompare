@@ -34,8 +34,8 @@ PRICE_CONTAINER_OVERRIDES = {
         }, 
         {
             "name":"S3_PRICE_RAW_BUCKET",
-            "value":os.getenc("S3_PRICE_RAW_BUCKET"),
-        }
+            "value":os.getenv("S3_PRICE_RAW_BUCKET"),
+        },
     ],
 }
 PRODUCT_CONTAINER_OVERRIDES = {
