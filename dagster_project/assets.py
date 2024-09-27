@@ -62,7 +62,7 @@ def product_prices_db(context: AssetExecutionContext):
 
     supabase = SUPABASE_CLIENT
     product_price_table = os.getenv('PRODUCT_PRICE_TABLE')
-    res = supabase.table(product_price_table).insert(rows).execute()
+    res = supabase.table(product_price_table).upsert(rows).execute()
     
 
 @asset(deps=[product_prices_db], 
