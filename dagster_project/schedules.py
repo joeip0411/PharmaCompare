@@ -11,17 +11,10 @@ cw_pricing_data_job = define_asset_job("cw_pricing_data_job",
                                                   "product_prices_db", 
                                                   "product_description"])
 
-# cw_pricing_data_schedule = ScheduleDefinition(
-#     job=cw_pricing_data_job,
-#     # cron_schedule="0 2 * * *",
-#     cron_schedule="15 * * * *",
-#     execution_timezone="Australia/Sydney",
-# )
 cw_pricing_data_schedule = build_schedule_from_partitioned_job(
     cw_pricing_data_job,
-    hour_of_day=14,
-    minute_of_hour=15,
-    execution_timezone='Australia/Sydney',
+    hour_of_day=2,
+    minute_of_hour=5,
 )
 
 schedules = [
