@@ -7,7 +7,10 @@ from dagster_dbt import build_schedule_from_dbt_selection
 from .assets import *
 
 cw_pricing_data_job = define_asset_job("cw_pricing_data_job", 
-                                       selection=["product_prices_staging", "product_prices_db", "product_description"])
+                                       selection=["product_prices_staging", 
+                                                  "product_prices_db", 
+                                                  "product_description"],
+                                        partitions_def=daily_partition_def)
 
 cw_pricing_data_schedule = ScheduleDefinition(
     job=cw_pricing_data_job,
