@@ -15,7 +15,7 @@ cw_pricing_data_job = define_asset_job("cw_pricing_data_job",
 cw_pricing_data_schedule = ScheduleDefinition(
     job=cw_pricing_data_job,
     # cron_schedule="0 2 * * *",
-    cron_schedule="45 * * * *",
+    cron_schedule="15 * * * *",
     execution_timezone="Australia/Sydney",
 )
 schedules = [
