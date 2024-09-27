@@ -4,8 +4,7 @@ import time
 from io import StringIO
 
 import boto3
-from dagster import (AssetExecutionContext, DailyPartitionsDefinition, Output,
-                     asset)
+from dagster import AssetExecutionContext, DailyPartitionsDefinition, Output, asset
 from dagster_dbt import DbtCliResource, dbt_assets
 
 from .project import dbt_project_project
@@ -39,10 +38,12 @@ def product_prices_staging() -> Output:
     res = check_ecs_task_status(task_arn)
     return res
 
+daily_partition_def = DailyPartitionsDefinition(start_date='2024-09-26', timezone='Australia/Sydney')
+
 @asset(compute_kind='python', 
         description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in postgres",
         deps=[product_prices_staging],
-        partitions_def=DailyPartitionsDefinition(start_date='2024-09-26', end_offset=1))
+        partitions_def=daily_partition_def)
 def product_prices_db(context: AssetExecutionContext):
     file = context.partition_key + '.csv'
 
@@ -61,7 +62,7 @@ def product_prices_db(context: AssetExecutionContext):
 
     supabase = SUPABASE_CLIENT
     product_price_table = os.getenv('PRODUCT_PRICE_TABLE')
-    res = supabase.table(product_price_table).insert(rows).execute()
+    res = supabase.table(product_price_table).upsert(rows).execute()
     
 
 @asset(deps=[product_prices_db], 
