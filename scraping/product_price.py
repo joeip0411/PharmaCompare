@@ -57,8 +57,8 @@ def get_product_prices(driver, category_urls):
             driver.execute_script("arguments[0].click();", next_btn)
             page += 1
  
-
-    kv = [{'data_id':i[0], 'price':i[1]} for i in res]
+    current_utc_time = datetime.now(timezone.utc).isoformat()
+    kv = [{'data_id':i[0], 'price':i[1], 'created_at_utc':current_utc_time} for i in res]
 
     return kv
 
