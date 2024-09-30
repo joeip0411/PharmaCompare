@@ -18,6 +18,9 @@ setup(
         "dbt-snowflake<1.9",
         "boto3",
         "supabase",
+        "dagster-snowflake",
+        "dagster-snowflake-pandas",
+        "pandas",
     ],
     extras_require={
         "dev": [

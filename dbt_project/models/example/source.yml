@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: chemistwarehouse
+    schema: "{{ target.schema }}"
+    tables:
+      - name: price_temp
+        meta:
+          dagster:
+            asset_key: ["price_temp"]
+        columns:
+          - name: data_id
+            tests:
+              - unique
+              - not_null
+          - name: price
+            tests:
+              - greater_than_zero

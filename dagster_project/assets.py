@@ -4,6 +4,7 @@ import time
 from io import StringIO
 
 import boto3
+import pandas as pd
 from dagster import AssetExecutionContext, DailyPartitionsDefinition, Output, asset
 from dagster_dbt import DbtCliResource, dbt_assets
 
@@ -15,7 +16,7 @@ from .util import *
 def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["build"], context=context).stream()
 
-@asset(compute_kind="python", description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3")
+@asset(compute_kind="s3", description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3")
 def product_prices_staging() -> Output:
 
     response = ECS_CLIENT.run_task(
@@ -40,7 +41,7 @@ def product_prices_staging() -> Output:
 
 daily_partition_def = DailyPartitionsDefinition(start_date='2024-09-26', timezone='Australia/Sydney')
 
-@asset(compute_kind='python', 
+@asset(compute_kind='postgres', 
         description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in postgres",
         deps=[product_prices_staging],
         partitions_def=daily_partition_def)
@@ -66,7 +67,7 @@ def product_prices_db(context: AssetExecutionContext):
     
 
 @asset(deps=[product_prices_db], 
-       compute_kind="python", 
+       compute_kind="postgres", 
        description="All product description for product listed in the price table. Can be NULL if description is not available on chemistwarehouse.com")
 def product_description() -> Output:
 
@@ -122,5 +123,23 @@ def check_ecs_task_status(task_arn:str):
     raise Exception(f"Unexpected task failure for task {task_arn}.")
 
 
+@asset(deps=[product_prices_staging], compute_kind='snowflake',
+        metadata = {"partition_expr": "created_at_utc"},
+        io_manager_key='sf_io_manager',
+        partitions_def=daily_partition_def, 
+        description='Price data staging table in Snowflake, used for data quality checks before merging into bronze layer')
+def price_temp(context: AssetExecutionContext) -> pd.DataFrame:
+    file = context.partition_key + '.csv'
 
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+        region_name = 'ap-southeast-2',
+    )
 
+    response = s3_client.get_object(Bucket=os.getenv('S3_PRICE_RAW_BUCKET'), Key=file)
+
+    price_raw = pd.read_csv(response['Body'])
+
+    return price_raw
