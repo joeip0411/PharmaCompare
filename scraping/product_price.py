@@ -4,6 +4,7 @@ import os
 import time
 from datetime import datetime, timezone
 
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -59,6 +60,10 @@ def get_product_prices(driver, category_urls):
  
     current_utc_time = datetime.now(timezone.utc).isoformat()
     kv = [{'data_id':i[0], 'price':i[1], 'created_at_utc':current_utc_time} for i in res]
+
+    df = pd.DataFrame(kv)
+    df = df.drop_duplicates(subset=['data_id'], keep='first')
+    kv = df.to_dict(orient='records')
 
     return kv
 
