@@ -1,7 +1,7 @@
 import os
 
 from bs4 import BeautifulSoup
-from util import *
+from util import CLOUD_SCRAPER, SUPABASE_CLIENT
 
 SOURCE_TABLE = os.getenv('PRODUCT_PRICE_TABLE')
 SINK_TABLE = os.getenv('PRODUCT_DESC_TABLE')
@@ -37,7 +37,7 @@ where data_id not in (select data_id from {SINK_TABLE})
         data_id = url.split('/')[4]
         try:
             product_name = soup.find('div', class_='product-name').contents[1].contents[0].strip()
-        except:
+        except:  # noqa: E722
             product_name = None
 
         product_info['data_id'] = data_id

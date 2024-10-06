@@ -1,22 +1,46 @@
 import csv
+import json
 import os
 import time
 from io import StringIO
 
 import boto3
 import pandas as pd
-from dagster import AssetExecutionContext, DailyPartitionsDefinition, Output, asset
+from dagster import (
+    AssetExecutionContext,
+    DailyPartitionsDefinition,
+    Output,
+    asset,
+)
 from dagster_dbt import DbtCliResource, dbt_assets
 
 from .project import dbt_project_project
-from .util import *
+from .util import (
+    ECS_CLIENT,
+    ECS_CLUSTER_NAME,
+    ECS_TASK_DEFINITION,
+    NETWORK_CONFIGURATION,
+    PRICE_CONTAINER_OVERRIDES,
+    PRODUCT_CONTAINER_OVERRIDES,
+    SUPABASE_CLIENT,
+)
 
+daily_partition_def = DailyPartitionsDefinition(start_date='2024-09-26', timezone='Australia/Sydney')
 
-@dbt_assets(manifest=dbt_project_project.manifest_path)
+@dbt_assets(manifest=dbt_project_project.manifest_path, partitions_def=daily_partition_def)
 def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
-    yield from dbt.cli(["build"], context=context).stream()
+    time_window = context.partition_time_window
+    dbt_vars = {
+        "start_date": time_window.start.isoformat(),
+        "end_date": time_window.end.isoformat(),
+    }
+    dbt_build_args = ["build", "--vars", json.dumps(dbt_vars)]
 
-@asset(compute_kind="s3", description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3")
+    yield from dbt.cli(dbt_build_args, context=context).stream()
+
+@asset(compute_kind="s3", 
+       description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3",
+       group_name='sourcing')
 def product_prices_staging() -> Output:
 
     response = ECS_CLIENT.run_task(
@@ -39,12 +63,12 @@ def product_prices_staging() -> Output:
     res = check_ecs_task_status(task_arn)
     return res
 
-daily_partition_def = DailyPartitionsDefinition(start_date='2024-09-26', timezone='Australia/Sydney')
 
 @asset(compute_kind='postgres', 
         description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in postgres",
         deps=[product_prices_staging],
-        partitions_def=daily_partition_def)
+        partitions_def=daily_partition_def,
+        group_name='transaction')
 def product_prices_db(context: AssetExecutionContext):
     file = context.partition_key + '.csv'
 
@@ -63,12 +87,13 @@ def product_prices_db(context: AssetExecutionContext):
 
     supabase = SUPABASE_CLIENT
     product_price_table = os.getenv('PRODUCT_PRICE_TABLE')
-    res = supabase.table(product_price_table).upsert(rows).execute()
+    supabase.table(product_price_table).upsert(rows).execute()
     
 
 @asset(deps=[product_prices_db], 
        compute_kind="postgres", 
-       description="All product description for product listed in the price table. Can be NULL if description is not available on chemistwarehouse.com")
+       description="All product description for product listed in the price table. Can be NULL if description is not available on chemistwarehouse.com",
+       group_name='transaction')
 def product_description() -> Output:
 
     response = ECS_CLIENT.run_task(
@@ -107,7 +132,7 @@ def check_ecs_task_status(task_arn:str):
         # Get the status of the task
         task_info = task_description['tasks'][0]
         task_status = task_info['lastStatus']
-        print(f"Current task status: {task_status}")
+        print(f"Current task status: {task_status}") 
 
         # If task is stopped, check for failures
         if task_status == 'STOPPED':
@@ -122,13 +147,13 @@ def check_ecs_task_status(task_arn:str):
 
     raise Exception(f"Unexpected task failure for task {task_arn}.")
 
-
-@asset(deps=[product_prices_staging], compute_kind='snowflake',
+@asset(compute_kind='snowflake',
         metadata = {"partition_expr": "created_at_utc"},
         io_manager_key='sf_io_manager',
-        partitions_def=daily_partition_def, 
-        description='Price data staging table in Snowflake, used for data quality checks before merging into bronze layer')
-def price_temp(context: AssetExecutionContext) -> pd.DataFrame:
+        partitions_def=daily_partition_def,
+        description='Raw historical product prices',
+        group_name='analytics')
+def bronze_price(context: AssetExecutionContext) -> pd.DataFrame:
     file = context.partition_key + '.csv'
 
     s3_client = boto3.client(

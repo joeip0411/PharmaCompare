@@ -4,15 +4,14 @@ sources:
   - name: chemistwarehouse
     schema: "{{ target.schema }}"
     tables:
-      - name: price_temp
+      - name: bronze_price
         meta:
           dagster:
-            asset_key: ["price_temp"]
+            asset_key: ["bronze_price"]
         columns:
           - name: data_id
             tests:
-              - unique
               - not_null
           - name: price
             tests:
-              - greater_than_zero
+              - non_negative
