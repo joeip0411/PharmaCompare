@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: cumulative_price
+    description: "This model combines historical and new price data incrementally."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: 
+            - data_id
+            - created_at_utc
+
+    columns:
+      - name: data_id
+        description: "Product identifier."
+
+      - name: created_at_utc
+        description: "Date indicating when the price data was created."
+
+      - name: date_prices
+        description: "An array of prices associated with the respective dates."
+
+unit_tests:
+  - name: test_new_product
+    model: cumulative_price
+    description: "new product in its own array"
+    overrides:
+      vars:
+        start_date: "2024-09-28"
+        end_date: "2024-09-29"
+      macros:
+        is_incremental: false
+    given:
+      - input: ref('silver_price')
+        rows:
+          - {data_id: 1, price: 1, created_at_utc: "2024-09-28"}
+      - input: this
+        rows:
+          - {data_id: null, date_prices: null, created_at_utc: null}
+    expect:
+      rows:
+        - {data_id: 1, date_prices: [{"2024-09-28": 1}], created_at_utc: "2024-09-28"}
+  - name: test_old_product_still_exists
+    model: cumulative_price
+    description: "old product continue to exist and concat to historical prices"
+    overrides:
+      vars:
+        start_date: "2024-09-28"
+        end_date: "2024-09-29"
+    given:
+      - input: ref('silver_price')
+        rows:
+          - {data_id: 1, price: 1, created_at_utc: "2024-09-28"}
+      - input: this
+        rows:
+          - {data_id: 1, date_prices: [{"2024-09-27": 2}], created_at_utc: "2024-09-27"}
+    expect:
+      rows:
+        - {data_id: 1, date_prices: [{"2024-09-28": 1}, {"2024-09-27": 2}], created_at_utc: "2024-09-28"}
+  - name: test_old_product_not_exist_today
+    model: cumulative_price
+    description: "old product does not exist today, null assigned to today's price"
+    overrides:
+      vars:
+        start_date: "2024-09-28"
+        end_date: "2024-09-29"
+    given:
+      - input: ref('silver_price')
+        rows:
+          - {data_id: null, price: null, created_at_utc: null}
+      - input: this
+        rows:
+          - {data_id: 1, date_prices: [{"2024-09-27": 2}], created_at_utc: "2024-09-27"}
+    expect:
+      format: sql
+      rows: |
+        select 1 as data_id, [object_construct_keep_null('2024-09-28', null), object_construct('2024-09-27',2)] as date_prices, '2024-09-28' as created_at_utc
