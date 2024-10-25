@@ -21,6 +21,7 @@ setup(
         "dagster-snowflake",
         "dagster-snowflake-pandas",
         "pandas",
+        "psycopg2"
     ],
     extras_require={
         "dev": [

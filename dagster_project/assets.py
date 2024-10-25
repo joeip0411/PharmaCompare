@@ -1,18 +1,24 @@
-import csv
 import json
 import os
+import subprocess
 import time
 from io import StringIO
+from pathlib import Path
 
 import boto3
 import pandas as pd
+import psycopg2
 from dagster import (
+    AssetDep,
     AssetExecutionContext,
+    AutomationCondition,
     DailyPartitionsDefinition,
     Output,
+    TimeWindowPartitionMapping,
     asset,
 )
 from dagster_dbt import DbtCliResource, dbt_assets
+from psycopg2.extras import execute_batch
 
 from .project import dbt_project_project
 from .util import (
@@ -26,17 +32,18 @@ from .util import (
 )
 
 daily_partition_def = DailyPartitionsDefinition(start_date='2024-09-26', timezone='Australia/Sydney')
+depends_on_past = TimeWindowPartitionMapping(start_offset=-1, end_offset=-1)
 
-@dbt_assets(manifest=dbt_project_project.manifest_path, partitions_def=daily_partition_def)
-def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
-    time_window = context.partition_time_window
-    dbt_vars = {
-        "start_date": time_window.start.isoformat(),
-        "end_date": time_window.end.isoformat(),
-    }
-    dbt_build_args = ["build", "--vars", json.dumps(dbt_vars)]
+# @dbt_assets(manifest=dbt_project_project.manifest_path, partitions_def=daily_partition_def)
+# def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
+#     time_window = context.partition_time_window
+#     dbt_vars = {
+#         "start_date": time_window.start.isoformat(),
+#         "end_date": time_window.end.isoformat(),
+#     }
+#     dbt_build_args = ["build", "--vars", json.dumps(dbt_vars)]
 
-    yield from dbt.cli(dbt_build_args, context=context).stream()
+#     yield from dbt.cli(dbt_build_args, context=context).stream()
 
 @asset(compute_kind="s3", 
        description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3",
@@ -81,13 +88,28 @@ def product_prices_db(context: AssetExecutionContext):
 
     response = s3_client.get_object(Bucket=os.getenv('S3_PRICE_RAW_BUCKET'), Key=file)
     csv_content = response['Body'].read().decode('utf-8')
-    csv_file = StringIO(csv_content)
-    csv_reader = csv.DictReader(csv_file)
-    rows = [row for row in csv_reader]
-
-    supabase = SUPABASE_CLIENT
+    csv_data = StringIO(csv_content)
+    df = pd.read_csv(csv_data)
+    
+    conn = psycopg2.connect(dbname='postgres',
+                            host=os.getenv('PG_HOST'),
+                            user=os.getenv('PG_USER'),
+                            password=os.getenv('PG_PASSWORD'),
+                            port=5432)
+    
+    cur = conn.cursor()
+    
     product_price_table = os.getenv('PRODUCT_PRICE_TABLE')
-    supabase.table(product_price_table).upsert(rows).execute()
+
+    upsert_sql = f"""
+    INSERT INTO {product_price_table} ({', '.join(df.columns)})
+    VALUES (%s, %s, %s)
+    ON CONFLICT (data_id, created_at_utc) DO NOTHING;
+    """
+    vals = [tuple(row) for row in df.to_numpy()]
+
+    execute_batch(cur, upsert_sql, vals)
+    conn.commit()
     
 
 @asset(deps=[product_prices_db], 
@@ -152,7 +174,8 @@ def check_ecs_task_status(task_arn:str):
         io_manager_key='sf_io_manager',
         partitions_def=daily_partition_def,
         description='Raw historical product prices',
-        group_name='analytics')
+        group_name='analytics',
+        )
 def bronze_price(context: AssetExecutionContext) -> pd.DataFrame:
     file = context.partition_key + '.csv'
 
@@ -168,3 +191,56 @@ def bronze_price(context: AssetExecutionContext) -> pd.DataFrame:
     price_raw = pd.read_csv(response['Body'])
 
     return price_raw
+
+dbt_project_dir=Path(__file__).joinpath("..", "..", "dbt_project").resolve()
+
+@asset(compute_kind='dbt', 
+        description="conformed price data",
+        deps=[bronze_price],
+        group_name='analytics')
+def silver_price(context: AssetExecutionContext):
+
+    dbt_build_args = ["dbt", "run", "--select", "silver_price"]
+
+    result = subprocess.run(
+        dbt_build_args,
+        cwd=dbt_project_dir,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    context.log.info(result.stdout)
+
+    if result.returncode != 0:
+        raise Exception
+
+
+@asset(compute_kind='dbt', 
+        description="cumulative price data",
+        deps=[silver_price, AssetDep('cumulative_price', partition_mapping=depends_on_past)],
+        group_name='analytics',
+        partitions_def=daily_partition_def,
+        automation_condition=AutomationCondition.eager())
+def cumulative_price(context: AssetExecutionContext):
+
+    time_window = context.partition_time_window
+    dbt_vars = {
+        "start_date": time_window.start.isoformat(),
+        "end_date": time_window.end.isoformat(),
+    }
+
+    dbt_build_args = ["dbt", "build", "--select", "cumulative_price", "--vars", json.dumps(dbt_vars)]
+
+    result = subprocess.run(
+        dbt_build_args,
+        cwd=dbt_project_dir,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    
+    context.log.info(result.stdout)
+
+    if result.returncode != 0:
+        raise Exception
