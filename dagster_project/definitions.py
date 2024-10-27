@@ -8,7 +8,7 @@ from dagster_project import assets
 
 from .project import dbt_project_project
 from .schedules import cw_pricing_data_job, cw_pricing_data_schedule
-from .sensors import cw_analytics_data_job, price_s3_staging_sensor
+from .sensors import cw_analytics_data_job, price_data_drop_sensor
 
 sf_schema = os.getenv("SNOWFLAKE_USER") if os.getenv("DBT_ENV") == 'dev' else "PUBLIC"
 all_assets = load_assets_from_modules([assets])
@@ -17,7 +17,7 @@ defs = Definitions(
     assets=all_assets,
     jobs=[cw_pricing_data_job, cw_analytics_data_job],
     schedules=[cw_pricing_data_schedule],
-    sensors=[price_s3_staging_sensor],
+    sensors=[price_data_drop_sensor],
     resources={
         "dbt": DbtCliResource(project_dir=dbt_project_project),
         "sf_io_manager": SnowflakePandasIOManager(

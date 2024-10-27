@@ -15,7 +15,7 @@ cw_analytics_data_job = define_asset_job("cw_analytics_data_job",
         monitored_assets=[AssetKey('product_prices_db')],
         job=cw_analytics_data_job,
 )
-def price_s3_staging_sensor(context: MultiAssetSensorEvaluationContext):
+def price_data_drop_sensor(context: MultiAssetSensorEvaluationContext):
     run_requests = []
     for (
         partition,
