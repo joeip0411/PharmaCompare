@@ -1,0 +1,10 @@
+
+version: 2
+
+models:
+  - name: silver_price
+    description: "Cleaned product prices"
+    config:
+      meta:
+        dagster:
+          group: analytics

@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: chemistwarehouse
+    schema: "{{ target.schema }}"
+    tables:
+      - name: bronze_price
+        meta:
+          dagster:
+            asset_key: ["bronze_price"]
+        columns:
+          - name: data_id
+            tests:
+              - not_null
+          - name: price
+            tests:
+              - non_negative

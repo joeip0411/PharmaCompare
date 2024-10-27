@@ -1,6 +1,6 @@
 dbt_project:
   outputs:
-    dev:
+    prod:
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
       database: CHEMIST_WAREHOUSE
       password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
@@ -10,4 +10,14 @@ dbt_project:
       type: snowflake
       user: "{{ env_var('SNOWFLAKE_USER') }}"
       warehouse: ENGINEERING_WH
-  target: dev
+    dev:
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      database: CHEMIST_WAREHOUSE
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: ACCOUNTADMIN
+      schema: "{{ env_var('SNOWFLAKE_USER') }}"
+      threads: 4
+      type: snowflake
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      warehouse: ENGINEERING_WH
+  target: "{{ env_var('DBT_ENV') }}"

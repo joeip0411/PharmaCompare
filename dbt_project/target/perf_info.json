@@ -1,12 +1,12 @@
 {
-    "path_count": 140,
+    "path_count": 144,
     "parsed_path_count": 0,
     "static_analysis_path_count": 0,
     "static_analysis_parsed_path_count": 0,
     "is_partial_parse_enabled": true,
     "is_static_analysis_enabled": true,
-    "read_files_elapsed": 0.054366700000173296,
-    "load_all_elapsed": 0.19045429999914631,
+    "read_files_elapsed": 0.05529990000650287,
+    "load_all_elapsed": 0.21232620009686798,
     "projects": [
         {
             "project_name": "dbt_project",

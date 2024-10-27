@@ -4,10 +4,11 @@ import os
 import time
 from datetime import datetime, timezone
 
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from util import *
+from util import S3_CLIENT, get_category_url
 
 S3_PRICE_RAW_BUCKET = os.getenv('S3_PRICE_RAW_BUCKET')
 
@@ -51,7 +52,7 @@ def get_product_prices(driver, category_urls):
             try:
                 next_btn = driver.find_element(
                     By.CSS_SELECTOR, 'button.pager__button.pager__button--next')
-            except:
+            except:  # noqa: E722
                 break
             
             driver.execute_script("arguments[0].click();", next_btn)
@@ -59,6 +60,10 @@ def get_product_prices(driver, category_urls):
  
     current_utc_time = datetime.now(timezone.utc).isoformat()
     kv = [{'data_id':i[0], 'price':i[1], 'created_at_utc':current_utc_time} for i in res]
+
+    df = pd.DataFrame(kv)
+    df = df.drop_duplicates(subset=['data_id'], keep='first')
+    kv = df.to_dict(orient='records')
 
     return kv
 
