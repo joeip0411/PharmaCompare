@@ -192,18 +192,13 @@ def bronze_price(context: AssetExecutionContext) -> pd.DataFrame:
 
     return price_raw
 
-dbt_project_dir=Path(__file__).joinpath("..", "..", "dbt_project").resolve()
 
-@asset(compute_kind='dbt', 
-        description="conformed price data",
-        deps=[bronze_price],
-        group_name='analytics')
-def silver_price(context: AssetExecutionContext):
 
-    dbt_build_args = ["dbt", "run", "--select", "silver_price"]
-
+def run_dbt_command(dbt_cmd:list, context:AssetExecutionContext):
+    dbt_project_dir=Path(__file__).joinpath("..", "..", "dbt_project").resolve()
+    
     result = subprocess.run(
-        dbt_build_args,
+        dbt_cmd,
         cwd=dbt_project_dir,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -215,6 +210,17 @@ def silver_price(context: AssetExecutionContext):
     if result.returncode != 0:
         raise Exception
 
+@asset(compute_kind='dbt', 
+        description="conformed price data",
+        deps=[bronze_price],
+        group_name='analytics')
+def silver_price(context: AssetExecutionContext):
+
+    dbt_deps = ["dbt", "deps"]
+    run_dbt_command(dbt_cmd=dbt_deps, context=context)
+
+    dbt_build_args = ["dbt", "run", "--select", "silver_price"]
+    run_dbt_command(dbt_cmd=dbt_build_args, context=context)
 
 @asset(compute_kind='dbt', 
         description="cumulative price data",
@@ -224,6 +230,9 @@ def silver_price(context: AssetExecutionContext):
         automation_condition=AutomationCondition.eager())
 def cumulative_price(context: AssetExecutionContext):
 
+    dbt_deps = ["dbt", "deps"]
+    run_dbt_command(dbt_cmd=dbt_deps, context=context)
+
     time_window = context.partition_time_window
     dbt_vars = {
         "start_date": time_window.start.isoformat(),
@@ -232,15 +241,4 @@ def cumulative_price(context: AssetExecutionContext):
 
     dbt_build_args = ["dbt", "build", "--select", "cumulative_price", "--vars", json.dumps(dbt_vars)]
 
-    result = subprocess.run(
-        dbt_build_args,
-        cwd=dbt_project_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    
-    context.log.info(result.stdout)
-
-    if result.returncode != 0:
-        raise Exception
+    run_dbt_command(dbt_cmd=dbt_build_args, context=context)
