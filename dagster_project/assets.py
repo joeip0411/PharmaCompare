@@ -17,10 +17,8 @@ from dagster import (
     TimeWindowPartitionMapping,
     asset,
 )
-from dagster_dbt import DbtCliResource, dbt_assets
 from psycopg2.extras import execute_batch
 
-from .project import dbt_project_project
 from .util import (
     ECS_CLIENT,
     ECS_CLUSTER_NAME,
@@ -28,27 +26,15 @@ from .util import (
     NETWORK_CONFIGURATION,
     PRICE_CONTAINER_OVERRIDES,
     PRODUCT_CONTAINER_OVERRIDES,
-    SUPABASE_CLIENT,
 )
 
 daily_partition_def = DailyPartitionsDefinition(start_date='2024-09-26', timezone='Australia/Sydney')
 depends_on_past = TimeWindowPartitionMapping(start_offset=-1, end_offset=-1)
 
-# @dbt_assets(manifest=dbt_project_project.manifest_path, partitions_def=daily_partition_def)
-# def dbt_project_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
-#     time_window = context.partition_time_window
-#     dbt_vars = {
-#         "start_date": time_window.start.isoformat(),
-#         "end_date": time_window.end.isoformat(),
-#     }
-#     dbt_build_args = ["build", "--vars", json.dumps(dbt_vars)]
-
-#     yield from dbt.cli(dbt_build_args, context=context).stream()
-
 @asset(compute_kind="s3", 
        description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3",
        group_name='sourcing')
-def product_prices_staging() -> Output:
+def product_prices_staging(context: AssetExecutionContext) -> Output:
 
     response = ECS_CLIENT.run_task(
         cluster=ECS_CLUSTER_NAME,
@@ -65,15 +51,13 @@ def product_prices_staging() -> Output:
         raise Exception(f"Failed to start task: {response}")
 
     task_arn = tasks[0]['taskArn']
-    print(f"Started ECS task: {task_arn}")
 
-    res = check_ecs_task_status(task_arn)
-    return res
+    context.log.info(f"Started ECS task: {task_arn}")
+    
 
 
 @asset(compute_kind='postgres', 
         description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in postgres",
-        deps=[product_prices_staging],
         partitions_def=daily_partition_def,
         group_name='transaction')
 def product_prices_db(context: AssetExecutionContext):
@@ -196,7 +180,7 @@ def bronze_price(context: AssetExecutionContext) -> pd.DataFrame:
 
 def run_dbt_command(dbt_cmd:list, context:AssetExecutionContext):
     dbt_project_dir=Path(__file__).joinpath("..", "..", "dbt_project").resolve()
-    
+
     result = subprocess.run(
         dbt_cmd,
         cwd=dbt_project_dir,

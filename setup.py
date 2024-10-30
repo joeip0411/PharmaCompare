@@ -16,6 +16,7 @@ setup(
         "dagster-dbt",
         "dbt-core<1.9",
         "dbt-snowflake<1.9",
+        "dagster_aws",
         "boto3",
         "supabase",
         "dagster-snowflake",
