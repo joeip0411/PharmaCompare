@@ -32,7 +32,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   dbt_project:
     # Config indicated by + and applies to all files under models/example/
-    +materialized: view
+    +materialized: table
 
 vars:
   # The `start_date` variable will be accessible in all resources
