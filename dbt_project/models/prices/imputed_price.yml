@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: imputed_price
+    description: "This model forward fill missing price of product if it is missing from a particular day"
+
+    columns:
+      - name: imputed_price
+        description: "Price imputed from most recent observed price if missing"
+        tests:
+          - not_null
+
+    config:
+      meta:
+        dagster:
+          group: analytics
+
+unit_tests:
+  - name: test_missing_middle_price_correctly_filled
+    model: imputed_price
+    given:
+      - input: ref('cumulative_price')
+        format: sql
+        rows: |
+          select 1 as data_id, '2024-09-29' as created_at_utc,  [object_construct('2024-09-29',1), object_construct_keep_null('2024-09-28', null), object_construct('2024-09-27',2)] as date_prices
+    expect:
+      format: sql
+      rows: |
+        select 1 as data_id, '2024-09-29' as created_at_utc,  1 as price, 1 as imputed_price union all
+        select 1 as data_id, '2024-09-28' as created_at_utc,  null as price, 2 as imputed_price union all
+        select 1 as data_id, '2024-09-27' as created_at_utc,  2 as price, 2 as imputed_price
+
+  - name: test_missing_last_price_correctly_filled
+    model: imputed_price
+    given:
+      - input: ref('cumulative_price')
+        format: sql
+        rows: |
+          select 1 as data_id, '2024-09-28' as created_at_utc,  [object_construct_keep_null('2024-09-28', null), object_construct('2024-09-27',2)] as date_prices
+    expect:
+      format: sql
+      rows: |
+        select 1 as data_id, '2024-09-28' as created_at_utc,  null as price, 2 as imputed_price union all
+        select 1 as data_id, '2024-09-27' as created_at_utc,  2 as price, 2 as imputed_price
+  
+
+  
