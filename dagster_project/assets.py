@@ -226,3 +226,16 @@ def cumulative_price(context: AssetExecutionContext):
     dbt_build_args = ["dbt", "build", "--select", "cumulative_price", "--vars", json.dumps(dbt_vars)]
 
     run_dbt_command(dbt_cmd=dbt_build_args, context=context)
+
+
+@asset(compute_kind='dbt', 
+        description="Imputed product price data",
+        deps=[cumulative_price],
+        group_name='analytics')
+def imputed_price(context: AssetExecutionContext):
+
+    dbt_deps = ["dbt", "deps"]
+    run_dbt_command(dbt_cmd=dbt_deps, context=context)
+
+    dbt_build_args = ["dbt", "build", "--select", "imputed_price"]
+    run_dbt_command(dbt_cmd=dbt_build_args, context=context)
