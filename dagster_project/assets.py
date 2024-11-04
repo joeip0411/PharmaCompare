@@ -34,7 +34,7 @@ depends_on_past = TimeWindowPartitionMapping(start_offset=-1, end_offset=-1)
 @asset(compute_kind="s3", 
        description="All product prices found on https://www.chemistwarehouse.com.au/categories, stored in S3",
        group_name='sourcing')
-def product_prices_staging(context: AssetExecutionContext) -> Output:
+def product_prices_staging(context: AssetExecutionContext):
 
     response = ECS_CLIENT.run_task(
         cluster=ECS_CLUSTER_NAME,
