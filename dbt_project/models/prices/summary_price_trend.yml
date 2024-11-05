@@ -1,0 +1,10 @@
+
+version: 2
+
+models:
+  - name: summary_price_trend
+    description: "Start and end date for each price set for a product"
+    config:
+      meta:
+        dagster:
+          group: analytics

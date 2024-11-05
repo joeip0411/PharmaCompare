@@ -239,3 +239,28 @@ def imputed_price(context: AssetExecutionContext):
 
     dbt_build_args = ["dbt", "build", "--select", "imputed_price"]
     run_dbt_command(dbt_cmd=dbt_build_args, context=context)
+
+@asset(compute_kind='dbt', 
+        description="Start and end date for each price set for a product",
+        deps=[imputed_price],
+        group_name='analytics')
+def summary_price_trend(context: AssetExecutionContext):
+
+    dbt_deps = ["dbt", "deps"]
+    run_dbt_command(dbt_cmd=dbt_deps, context=context)
+
+    dbt_build_args = ["dbt", "build", "--select", "summary_price_trend"]
+    run_dbt_command(dbt_cmd=dbt_build_args, context=context)
+
+
+@asset(compute_kind='dbt', 
+        description="Probability of prices for each product based on observed historical prices",
+        deps=[summary_price_trend],
+        group_name='analytics')
+def summary_price_prob(context: AssetExecutionContext):
+
+    dbt_deps = ["dbt", "deps"]
+    run_dbt_command(dbt_cmd=dbt_deps, context=context)
+
+    dbt_build_args = ["dbt", "build", "--select", "summary_price_prob"]
+    run_dbt_command(dbt_cmd=dbt_build_args, context=context)

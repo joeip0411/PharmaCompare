@@ -1,0 +1,10 @@
+
+version: 2
+
+models:
+  - name: summary_price_prob
+    description: "Probability of prices for each product based on observed historical prices"
+    config:
+      meta:
+        dagster:
+          group: analytics
